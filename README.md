@@ -1,4 +1,5 @@
 # Credit Card Fraud Detection
+![imagem](https://media.istockphoto.com/id/1372744118/pt/foto/close-up-unhappy-man-having-problem-with-credit-card.jpg?s=1024x1024&w=is&k=20&c=TGVBdFDChjKENwUKcy-v7X2qdHRiEKDrPz9dW1Hwjcc=)
 This repository was made to explain the project of **[Kaggle](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud/data)**:
 
 **The comments in the codes are in PT-BR**
@@ -11,7 +12,7 @@ This repository was made to explain the project of **[Kaggle](https://www.kaggle
 &nbsp;<a href="https://www.linkedin.com/in/brunofcb/">
   <img src="https://img.shields.io/badge/linkedin-%230077B5.svg?style=for-the-badge&logo=linkedin&logoColor=white">
 </a>&nbsp;
-## [Step 1: EDA]()
+## [Step 1: EDA](https://github.com/BrunoFelipeCB/Credit-Card-Fraud-Detection/blob/main/notebooks/01-EDA.ipynb)
 <p>In this step, we conduct an exploratory analysis of the data to understand its characteristics, identify potential challenges, and prepare the dataset for modeling.</p>
 <p><b>1. Dataset Characteristics:</b></p>
 
@@ -27,7 +28,7 @@ This repository was made to explain the project of **[Kaggle](https://www.kaggle
 
 - The dataset is highly imbalanced, with 99.83% of transactions being non-fraudulent, complicating the analysis. In this context, recall is the main metric, as it improves the detection rate for fraudulent transactions.
 
-[imagem]
+![imagem](https://github.com/BrunoFelipeCB/Credit-Card-Fraud-Detection/blob/main/imagem/distribuicao.png)
 
 <p><b>4. Outlier Analysis:</b></p>
 
@@ -37,7 +38,7 @@ This repository was made to explain the project of **[Kaggle](https://www.kaggle
 
 - The observation that 72% of these outliers are fraudulent indicates that these variables effectively capture the anomalous behavior. Therefore, I opted to retain these outliers to preserve as much fraud information as possible. 
 
-[imagem]
+![imagem](https://github.com/BrunoFelipeCB/Credit-Card-Fraud-Detection/blob/main/imagem/An%C3%A1lise%20das%20features.png)
 
 <p><b>5. Model Selection</b>:</p>
 
@@ -54,8 +55,9 @@ This repository was made to explain the project of **[Kaggle](https://www.kaggle
 <p><b>8.Precision-Recall Curve Plotting:</b></p>
 
 - After training the models, I generated precision-recall curves for each to visualize their performance in detecting fraud, given the dataset’s imbalance. This plot helps me identify the model with the best balance of precision and recall for detecting fraudulent transactions.
+![imagem](https://github.com/BrunoFelipeCB/Credit-Card-Fraud-Detection/blob/main/imagem/Curvas%20de%20Precis%C3%A3o-Recall.png)
 
-## [Step 2: Hyperparameters]()
+## [Step 2: Hyperparameters](https://github.com/BrunoFelipeCB/Credit-Card-Fraud-Detection/blob/main/notebooks/02-Hiperparametros.ipynb)
 <p>The objective now is to take the models and tune the hyperparameters to determine which one performs best using GridSearchCV.</p>
 <b>Selected Models:</b>
 
@@ -69,6 +71,20 @@ This repository was made to explain the project of **[Kaggle](https://www.kaggle
   
 <p><b> Logistic Regression (RL)</b></p>
 
+- Code:
+```python
+# Definindo os parâmetros para o GridSearch
+parameters = {
+    'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000], 
+    'solver': ['liblinear', 'saga', 'newton-cg', 'lbfgs', 'sag'],  
+}
+
+# Criando o classificador de Regressão Logística
+RL_GS = LogisticRegression(random_state=42)
+clf_GS_LR = GridSearchCV(RL_GS, 
+                         parameters, 
+                         scoring='recall').fit(X_res, y_res)
+```
 - Hyperparameters: {'C': 0.001, 'solver': 'liblinear'}
   
 - Performance: The Logistic Regression model demonstrated an improvement in true positives, indicating its effectiveness in correctly identifying fraudulent cases. However, this adjustment also resulted in an increase in false positives, leading to some legitimate cases being incorrectly flagged as fraudulent.
@@ -76,17 +92,60 @@ This repository was made to explain the project of **[Kaggle](https://www.kaggle
 - Decision: Given that the model achieved a high number of true positives (152), it was selected as the preferred option for fraud detection.
 <p><b> Support Vector Classifier (SVC)</b></p>
 
+- Code:
+```python
+C_values = np.logspace(-2, 3, num=6)
+#Escolhendo os parametros 
+parameters = {'kernel':('linear', 'rbf','poly','sigmoid'), 
+              'C':C_values,
+             'class_weight': [None, 'balanced']}
+#Criando um classificado e fazendo o fit
+svc_GS = SVC(random_state=42,probability=True)
+clf_GS_SVM = GridSearchCV(svc_GS, 
+                          parameters, 
+                          scoring='recall').fit(X_res,y_res)
+```
 - Hyperparameters: {'C': 1000.0, 'class_weight': None, 'kernel': 'linear'}
   
 - Performance:The SVC model succeeded in reducing false positives compared to the RL model. However, it showed a decline in the number of true positives, making it less effective in accurately identifying fraud.
   
 <p><b> K-Nearest Neighbors (KNN)</b></p>
 
+- Code:
+
+```python
+#Escolhendo os parametros 
+
+parameters = {'n_neighbors':[3, 5, 7, 9], 
+              'weights':("uniform", "distance"),
+             'algorithm': ("auto", "ball_tree", "kd_tree", "brute")}
+#Criando um classificado e fazendo o fit
+KNN_GS = KNeighborsClassifier()
+clf_GS_KNN = GridSearchCV(KNN_GS, 
+                          parameters, 
+                          scoring='recall').fit(X_res,y_res)
+```
+
 - Hyperparameters: {'algorithm': 'auto', 'n_neighbors': 3, 'weights': 'uniform'}
   
 - Performance: The KNN model was able to increase the number of true positives, improving its identification of fraudulent cases. However, this came at the cost of a higher rate of false positives compared to the SVC model, leading to more legitimate transactions being misclassified.
   
 <p><b> Random Forest (RF)</b></p>
+
+- Code:
+
+```python
+#Escolhendo os parametros 
+
+parameters = {'n_estimators':[50, 100, 200, 400], 
+              'criterion':("gini", "entropy", "log_loss"),
+             'max_depth': [1,3,5,7,9,12]}
+#Criando um classificado e fazendo o fit
+RF_GS = RandomForestClassifier(random_state=42)
+clf_GS_RF = GridSearchCV(RF_GS, 
+                          parameters, 
+                          scoring='recall').fit(X_res,y_res)
+```
 
 - Hyperparameters: {'criterion': 'gini', 'max_depth': 9, 'n_estimators': 200}
   
@@ -117,7 +176,7 @@ This repository was made to explain the project of **[Kaggle](https://www.kaggle
 ##### Code Utilization for Cost Estimation
 <p>To illustrate the practical application of the model, the following code demonstrates how to calculate the costs associated with fraud detection using the confusion matrix generated from the model's predictions.</p>
 
-[imagem]
+![imagem](https://github.com/BrunoFelipeCB/Credit-Card-Fraud-Detection/blob/main/imagem/preco_fraudes.png)
 
 ##### Explanation of the Code
 - Confusion Matrix: The confusion matrix is generated to evaluate the model's performance, allowing the identification of true positives, false positives, true negatives, and false negatives.
